@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Net.Http;
 
 namespace DownloadAllImages
 {
@@ -18,33 +19,50 @@ namespace DownloadAllImages
             InitializeComponent();
         }
 
-        private  void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
-            downloadHtmlToFile(textBox.Text);
+           string html = await downloadHtml(textBox.Text);
+           writeToFile(html, textBox.Text);
         }
 
-
-
-
-        private void downloadHtmlToFile(string urlString)
+        private void writeToFile(string content,string urlString)
         {
 
             string desctopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string folderPath = desctopPath + @"\Downloaded images";
+            string fileName = urlString;
 
-            string newFolderPath = folderPath + @"\" + textBox.Text;
-            string newFilePath = newFolderPath + @"\" + textBox.Text + ".html";
+            int i = fileName.Length - 1;
+            while (fileName[i] != '/')
+                i--;
+            fileName = fileName.Substring(i + 1);
+
+            string newFolderPath = folderPath + @"\" + fileName;
+            string newFilePath = newFolderPath + @"\" + fileName + ".html";
 
 
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
             if (!Directory.Exists(newFolderPath))
-                Directory.CreateDirectory(folderPath);
+                Directory.CreateDirectory(newFolderPath);
 
-            FileStream file = new FileStream(newFilePath, FileMode.Create, FileAccess.ReadWrite);
+            
+            FileStream file = new FileStream(newFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             StreamWriter writer = new StreamWriter(file);
-            writer.WriteAsync("aaaaaaaaaaaaa");
+            writer.WriteAsync(content).Wait();
             writer.Close();
+        }
+
+        private Task<string> downloadHtml(string urlString)
+        {
+            return Task.Run(() =>
+            {
+                using (var client = new HttpClient())
+                {
+                    Task<string> task = client.GetStringAsync(urlString);
+                    return task.Result;
+                }
+            });
         }
     }
 }

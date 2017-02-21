@@ -19,11 +19,6 @@ namespace DownloadAllImages
             Application.Run(new Form1());
         }
 
-        static void aaa()
-        {
 
-
-
-        }
     }
 }
